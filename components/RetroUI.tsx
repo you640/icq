@@ -26,18 +26,32 @@ export const WinWindow: React.FC<Props> = ({ className = '', children, ...props 
   );
 };
 
-export const WinTitleBar: React.FC<Props & { icon?: React.ReactNode, title: string, onClose?: () => void, isActive?: boolean }> = ({ 
-  icon, title, onClose, isActive = true, className = '' 
+interface TitleBarProps extends React.HTMLAttributes<HTMLDivElement> {
+  icon?: React.ReactNode;
+  title: string;
+  onClose?: () => void;
+  onMinimize?: () => void;
+  isActive?: boolean;
+}
+
+export const WinTitleBar: React.FC<TitleBarProps> = ({ 
+  icon, title, onClose, onMinimize, isActive = true, className = '', ...props 
 }) => {
   return (
-    <div className={`flex items-center justify-between p-1 h-[18px] mb-[2px] ${isActive ? 'bg-[#000080]' : 'bg-[#808080]'} text-white ${className}`}>
-      <div className="flex items-center gap-1 overflow-hidden">
+    <div 
+      className={`flex items-center justify-between p-1 h-[18px] mb-[2px] ${isActive ? 'bg-[#000080]' : 'bg-[#808080]'} text-white ${className}`}
+      {...props}
+    >
+      <div className="flex items-center gap-1 overflow-hidden pointer-events-none">
         {icon && <div className="w-3 h-3">{icon}</div>}
         <span className="font-bold text-[11px] truncate leading-none pt-[1px]">{title}</span>
       </div>
-      <div className="flex gap-[2px]">
-        {/* Minimize Button Mock */}
-        <button className="w-[14px] h-[14px] bg-[#c0c0c0] border border-t-[#ffffff] border-l-[#ffffff] border-r-[#000000] border-b-[#000000] flex items-center justify-center active:border-t-[#000000] active:border-l-[#000000] active:border-r-[#ffffff] active:border-b-[#ffffff]">
+      <div className="flex gap-[2px]" onMouseDown={(e) => e.stopPropagation()}>
+        {/* Minimize Button */}
+        <button 
+          onClick={onMinimize}
+          className="w-[14px] h-[14px] bg-[#c0c0c0] border border-t-[#ffffff] border-l-[#ffffff] border-r-[#000000] border-b-[#000000] flex items-center justify-center active:border-t-[#000000] active:border-l-[#000000] active:border-r-[#ffffff] active:border-b-[#ffffff]"
+        >
           <div className="w-[6px] h-[2px] bg-black translate-y-[3px]"></div>
         </button>
         {/* Maximize Button Mock */}
@@ -61,7 +75,7 @@ export const WinTitleBar: React.FC<Props & { icon?: React.ReactNode, title: stri
 export const WinButton: React.FC<Props & { isActive?: boolean }> = ({ className = '', children, isActive = false, ...props }) => {
   // If isActive is true, simulated pressed state permanently
   const borderClass = isActive 
-    ? 'border-t-[#000000] border-l-[#000000] border-r-[#ffffff] border-b-[#ffffff] bg-[#dfdfdf]' // Sunken
+    ? 'border-t-[#000000] border-l-[#000000] border-r-[#ffffff] border-b-[#ffffff] bg-[#dfdfdf] ' // Sunken
     : 'border-t-[#ffffff] border-l-[#ffffff] border-r-[#000000] border-b-[#000000] active:border-t-[#000000] active:border-l-[#000000] active:border-r-[#ffffff] active:border-b-[#ffffff]'; // Raised
 
   return (

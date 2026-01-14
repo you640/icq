@@ -2,59 +2,35 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Contact, Message } from '../types';
 import { WinWindow, WinTitleBar, WinButton, WinTextArea, WinInsetPanel } from './RetroUI';
 import { ICQFlower, SendIcon } from './Icons';
-import { getReplyFromGemini } from '../services/geminiService';
-import { useSound } from '../hooks/useSound';
 
 interface Props {
   contact: Contact;
-  initialMessages: Message[];
+  messages: Message[];
   onClose: () => void;
+  onMinimize: () => void;
   onSendMessage: (contactId: string, text: string) => void;
+  isActive: boolean;
+  isTyping: boolean;
+  onMouseDown: () => void;
+  onDragStart: (e: React.MouseEvent) => void;
 }
 
-export const ChatWindow: React.FC<Props> = ({ contact, initialMessages, onClose, onSendMessage }) => {
+export const ChatWindow: React.FC<Props> = ({ 
+  contact, messages, onClose, onMinimize, onSendMessage, isActive, isTyping, onMouseDown, onDragStart 
+}) => {
   const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { playIncomingMessage, playTypewriter } = useSound();
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Scroll to bottom on new message
+  // Scroll to bottom on new message or when typing starts
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-  }, [messages]);
+  }, [messages, isTyping]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!inputText.trim()) return;
-
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      sender: 'user',
-      text: inputText,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMsg]);
+    onSendMessage(contact.id, inputText);
     setInputText('');
-    playTypewriter();
-    
-    // Simulate network delay and typing
-    setIsTyping(true);
-    
-    // Call Gemini
-    const replyText = await getReplyFromGemini(contact.name, contact.id, userMsg.text);
-    
-    setIsTyping(false);
-    
-    const replyMsg: Message = {
-      id: (Date.now() + 1).toString(),
-      sender: 'contact',
-      text: replyText,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, replyMsg]);
-    playIncomingMessage();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -64,22 +40,76 @@ export const ChatWindow: React.FC<Props> = ({ contact, initialMessages, onClose,
     }
   };
 
+  const insertTag = (tag: string) => {
+    if (!textAreaRef.current) return;
+    
+    const start = textAreaRef.current.selectionStart;
+    const end = textAreaRef.current.selectionEnd;
+    const text = inputText;
+    
+    const before = text.substring(0, start);
+    const selection = text.substring(start, end);
+    const after = text.substring(end);
+    
+    const openTag = `[${tag}]`;
+    const closeTag = `[/${tag}]`;
+    
+    const newText = before + openTag + selection + closeTag + after;
+    setInputText(newText);
+    
+    // Restore focus and selection
+    setTimeout(() => {
+        if(textAreaRef.current) {
+            textAreaRef.current.focus();
+            textAreaRef.current.setSelectionRange(start + openTag.length, end + openTag.length);
+        }
+    }, 0);
+  };
+
+  // Simple parser for [b] and [i] tags and URLs
+  const renderMessageText = (text: string) => {
+    // 1. Split by tags
+    const parts = text.split(/(\[b\].*?\[\/b\]|\[i\].*?\[\/i\]|https?:\/\/[^\s]+)/g);
+    
+    return parts.map((part, index) => {
+      if (part.startsWith('[b]') && part.endsWith('[/b]')) {
+        return <strong key={index}>{part.slice(3, -4)}</strong>;
+      }
+      if (part.startsWith('[i]') && part.endsWith('[/i]')) {
+        return <em key={index}>{part.slice(3, -4)}</em>;
+      }
+      if (part.match(/^https?:\/\//)) {
+        return <a key={index} href={part} target="_blank" rel="noreferrer" className="text-blue-800 underline hover:text-blue-600">{part}</a>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   return (
-    <WinWindow className="w-[320px] h-[350px] absolute top-10 left-10 z-50 flex flex-col">
+    <WinWindow 
+      className="w-[320px] h-[350px] flex flex-col"
+      onMouseDown={onMouseDown} // Bring to front on click
+    >
       <WinTitleBar 
         title={`Message Session with ${contact.name}`} 
         icon={<ICQFlower status={contact.isOnline ? 'online' : 'offline'} />} 
         onClose={onClose} 
+        onMinimize={onMinimize}
+        isActive={isActive}
+        onMouseDown={onDragStart} // Start drag
+        className="cursor-default"
       />
 
       <div className="flex-1 flex flex-col p-1 gap-1 overflow-hidden">
         
-        {/* Toolbar Placeholder */}
+        {/* Toolbar */}
         <div className="flex gap-1 mb-1 border-b border-[#808080] pb-1">
-            <WinButton className="w-6 h-6 flex items-center justify-center">T</WinButton>
-            <WinButton className="w-6 h-6 flex items-center justify-center text-xs">A</WinButton>
-            <WinButton className="w-6 h-6 flex items-center justify-center font-bold">B</WinButton>
-            <WinButton className="w-6 h-6 flex items-center justify-center italic">I</WinButton>
+            <WinButton className="w-6 h-6 flex items-center justify-center font-serif">T</WinButton>
+            <WinButton className="w-6 h-6 flex items-center justify-center font-bold" onClick={() => insertTag('b')}>B</WinButton>
+            <WinButton className="w-6 h-6 flex items-center justify-center italic font-serif" onClick={() => insertTag('i')}>I</WinButton>
+            <WinButton className="w-6 h-6 flex items-center justify-center underline">U</WinButton>
+            <div className="border-l border-[#808080] mx-1 h-full"></div>
+            <WinButton className="w-6 h-6 flex items-center justify-center text-[9px]">☺</WinButton>
         </div>
 
         {/* Message Log */}
@@ -90,12 +120,12 @@ export const ChatWindow: React.FC<Props> = ({ contact, initialMessages, onClose,
                 {msg.sender === 'user' ? 'You' : contact.name}:
               </div>
               <div className="pl-2 text-black whitespace-pre-wrap">
-                  {msg.text}
+                  {renderMessageText(msg.text)}
               </div>
             </div>
           ))}
           {isTyping && (
-             <div className="text-[#808080] italic text-[10px] pl-2">* User is typing...</div>
+             <div className="text-[#808080] italic text-[10px] pl-2 mt-2">* {contact.name} is typing...</div>
           )}
           <div ref={messagesEndRef} />
         </WinInsetPanel>
@@ -104,7 +134,8 @@ export const ChatWindow: React.FC<Props> = ({ contact, initialMessages, onClose,
         <div className="h-[80px] flex gap-1 mt-1">
           <div className="flex-1 h-full">
             <WinTextArea 
-              className="w-full h-full"
+              ref={textAreaRef}
+              className="w-full h-full font-['Tahoma']"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
