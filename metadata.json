@@ -1,0 +1,5 @@
+{
+  "name": "ICQ 99 Web Replica",
+  "description": "A fully functional, pixel-perfect replica of the classic ICQ 99 client using React and Tailwind CSS. Features real-time AI chat simulation powered by Gemini.",
+  "requestFramePermissions": []
+}

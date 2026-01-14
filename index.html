@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ICQ 99 Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Retro Scrollbar Styling */
+      ::-webkit-scrollbar {
+        width: 16px;
+        height: 16px;
+        background: #dfdfdf;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #c0c0c0;
+        border: 2px solid;
+        border-color: #ffffff #808080 #808080 #ffffff;
+      }
+      ::-webkit-scrollbar-button {
+        background: #c0c0c0;
+        width: 16px;
+        height: 16px;
+        border: 2px solid;
+        border-color: #ffffff #808080 #808080 #ffffff;
+        display: block;
+      }
+      /* Solid textured background pattern */
+      ::-webkit-scrollbar-track {
+        background: #dfdfdf; /* Dotted pattern simulation usually involves images, sticking to solid gray for CSS-only */
+      }
+      
+      body {
+        background-color: #008080; /* Classic Teal Desktop */
+        font-family: 'Tahoma', 'MS Sans Serif', sans-serif;
+        -webkit-font-smoothing: none;
+        image-rendering: pixelated;
+      }
+
+      /* Cursor utilities */
+      .cursor-retro {
+        cursor: default;
+      }
+      
+      .cursor-text-retro {
+        cursor: text;
+      }
+
+      .cursor-pointer-retro {
+        cursor: pointer;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
